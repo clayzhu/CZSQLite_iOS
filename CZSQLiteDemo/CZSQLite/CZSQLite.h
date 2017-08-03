@@ -12,7 +12,8 @@
 
 /**
  *  对 SQLite 3.0 数据库的常用操作的封装，可以再二次封装一个帮助类，以更方便地对当前的项目数据库进行操作。
- *  PS：添加数据库的时候，务必勾选上 Add to targets.
+ *  PS: 1. 添加已有的数据库到项目里的时候，务必勾选上 Add to targets.
+ *      2. 需要在 Build Phases 的 Link Binary With Libraries 中添加 libsqlite.tbd
  */
 @interface CZSQLite : NSObject
 
