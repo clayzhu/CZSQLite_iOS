@@ -1,7 +1,7 @@
 # CZSQLite_iOS
 对 SQLite 的封装，可以使用 NSArray、NSDictionary 等类型对象简单直观地操作数据库。
 
-## 1. 介绍
+## 介绍
 
 SQLite 数据库非常小巧，是轻量级的，是移动客户端设计本地数据库时的首选。
 
