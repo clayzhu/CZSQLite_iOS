@@ -10,12 +10,31 @@
 
 @interface CZSQLite ()
 {
-	sqlite3 *_db;
+    sqlite3 *_db;
 }
 
 @end
 
 @implementation CZSQLite
+
+- (void)openDB:(NSString *)dbPath {
+    CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
+    sqlite3_config(SQLITE_CONFIG_SERIALIZED);   // SQLite 使用串行模式，所有线程共用全局的数据库连接，并开启 WAL 模式，提高性能的同时，保证线程安全
+    int openCode = sqlite3_open([dbPath UTF8String], &_db);
+    result.code = openCode;
+    if (openCode != SQLITE_OK) {
+        NSLog(@"数据库打开失败");
+        result.errorMsg = @"数据库打开失败";
+    } else {
+        NSLog(@"数据库打开成功");
+        // 开启 Write-Ahead Logging 模式，并发性更好
+        char *err;
+        if (sqlite3_exec(_db, "PRAGMA journal_mode=WAL;", NULL, NULL, &err) != SQLITE_OK) {
+            NSLog(@"Failed to set WAL mode: %s", err);
+        }
+        sqlite3_wal_checkpoint(_db, NULL);  // 每次测试前先 checkpoint，避免 WAL 文件过大而影响性能
+    }
+}
 
 - (CZSQLiteResult *)createDB:(NSString *)dbName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
@@ -23,17 +42,8 @@
 	if ([[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
 		NSLog(@"数据库已经存在");
 		result.errorMsg = @"数据库已经存在";
-	} else {
-		int openCode = sqlite3_open([dbPath UTF8String], &_db);
-		result.code = openCode;
-		if (openCode != SQLITE_OK) {
-			NSLog(@"数据库打开失败");
-			result.errorMsg = @"数据库打开失败";
-		} else {
-			NSLog(@"数据库打开成功");
-		}
-		sqlite3_close(_db);
 	}
+    [self openDB:dbPath];
 	return result;
 }
 
@@ -56,20 +66,7 @@
 		NSData *mainBundleFile = [NSData dataWithContentsOfFile:localDBFilePath];	// bundle 中的数据库的数据
 		[[NSFileManager defaultManager] createFileAtPath:dbPath contents:mainBundleFile attributes:nil];	// 在 Document 中创建一个同名同数据的数据库
 	}
-	
-	if ([[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
-		
-	} else {
-		int openCode = sqlite3_open([dbPath UTF8String], &_db);
-		result.code = openCode;
-		if (openCode != SQLITE_OK) {
-			NSLog(@"数据库打开失败");
-			result.errorMsg = @"数据库打开失败";
-		} else {
-			NSLog(@"数据库打开成功");
-		}
-		sqlite3_close(_db);
-	}
+    [self openDB:dbPath];
 	return result;
 }
 
@@ -86,24 +83,15 @@
 
 - (CZSQLiteResult *)execSQL:(NSString *)sqlStr forDB:(NSString *)dbName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
-	NSString *dbPath = [self dbPath:dbName];
-	int openCode = sqlite3_open([dbPath UTF8String], &_db);	// 打开数据库的 code
-	if (openCode != SQLITE_OK) {
-		NSLog(@"数据库打开失败");
-		result.code = openCode;
-		result.errorMsg = @"数据库打开失败";
-	} else {
-		char *err;
-		int execCode = sqlite3_exec(_db, [sqlStr UTF8String], NULL, NULL, &err);	// 执行 SQL 语句的 code
-		result.code = execCode;
-		if (execCode != SQLITE_OK) {
-			NSLog(@"数据库操作失败");
-			result.errorMsg = [[NSString alloc] initWithUTF8String:err];
-		} else {
-			NSLog(@"数据库操作成功");
-		}
-	}
-	sqlite3_close(_db);
+    char *err;
+    int execCode = sqlite3_exec(_db, [sqlStr UTF8String], NULL, NULL, &err);    // 执行 SQL 语句的 code
+    result.code = execCode;
+    if (execCode != SQLITE_OK) {
+        NSLog(@"数据库操作失败");
+        result.errorMsg = [[NSString alloc] initWithUTF8String:err];
+    } else {
+        NSLog(@"数据库操作成功");
+    }
 	return result;
 }
 
@@ -147,53 +135,44 @@
 
 - (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName forDB:(NSString *)dbName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
-	NSString *dbPath = [self dbPath:dbName];
-	int openCode = sqlite3_open([dbPath UTF8String], &_db);
-	if (openCode != SQLITE_OK) {
-		NSLog(@"数据库打开失败");
-		result.code = openCode;
-		result.errorMsg = @"数据库打开失败";
-	} else {
-		NSString *column = @"";
-		if (columnList && columnList.count > 0) {
-			for (NSString *columnName in columnList) {
-				column = [column stringByAppendingFormat:@"%@,", columnName];	// 拼装查询指定列名的参数
-			}
-			column = [column substringToIndex:column.length - 1];	// 剪掉最后一个“,”
-		} else {	// 列名列表参数不传的话，表示查询全部
-			column = @"*";
-		}
-		NSString *sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@", column, tableName, [self assembleCondition:conditionParam]];
-		sqlite3_stmt *stmt;
-		int prepareCode = sqlite3_prepare_v2(_db, [sqlQuery UTF8String], -1, &stmt, NULL);	// 查询数据库的 code
-		result.code = prepareCode;
-		if (prepareCode == SQLITE_OK) {
-			NSLog(@"数据库查询成功");
-			NSMutableArray *results = [NSMutableArray array];
-			while (sqlite3_step(stmt) == SQLITE_ROW) {	// 一行行逐步查询
-				NSMutableDictionary *columnNameValue = [NSMutableDictionary dictionary];
-				for (int i = 0; i < sqlite3_column_count(stmt); i ++) {	// 查询的列数
-					NSString *columnName = [NSString stringWithUTF8String:(char *)sqlite3_column_name(stmt, i)];	// 第i列的列名
-					NSString *columnValue;
-					if (NULL != (char *)sqlite3_column_text(stmt, i)) {	// 该列的值
-						columnValue = [NSString stringWithUTF8String:(char *)sqlite3_column_text(stmt, i)];
-					} else {
-						columnValue = @"";
-					}
-					[columnNameValue setObject:columnValue forKey:columnName];
-				}
-				[results addObject:columnNameValue];
-			}
-			result.data = results;
-		} else {
-			NSLog(@"数据库查询失败");
-			char *errMsg = (char *)sqlite3_errmsg(_db);
-			NSString *errMsgStr = [[NSString alloc] initWithUTF8String:errMsg];
-			NSLog(@"errmsg:%@", errMsgStr);
-			result.errorMsg = errMsgStr;
-		}
-	}
-	sqlite3_close(_db);
+    NSString *column = @"";
+    if (columnList && columnList.count > 0) {
+        for (NSString *columnName in columnList) {
+            column = [column stringByAppendingFormat:@"%@,", columnName];    // 拼装查询指定列名的参数
+        }
+        column = [column substringToIndex:column.length - 1];    // 剪掉最后一个“,”
+    } else {    // 列名列表参数不传的话，表示查询全部
+        column = @"*";
+    }
+    NSString *sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@", column, tableName, [self assembleCondition:conditionParam]];
+    sqlite3_stmt *stmt;
+    int prepareCode = sqlite3_prepare_v2(_db, [sqlQuery UTF8String], -1, &stmt, NULL);    // 查询数据库的 code
+    result.code = prepareCode;
+    if (prepareCode == SQLITE_OK) {
+        NSLog(@"数据库查询成功");
+        NSMutableArray *results = [NSMutableArray array];
+        while (sqlite3_step(stmt) == SQLITE_ROW) {    // 一行行逐步查询
+            NSMutableDictionary *columnNameValue = [NSMutableDictionary dictionary];
+            for (int i = 0; i < sqlite3_column_count(stmt); i ++) {    // 查询的列数
+                NSString *columnName = [NSString stringWithUTF8String:(char *)sqlite3_column_name(stmt, i)];    // 第i列的列名
+                NSString *columnValue;
+                if (NULL != (char *)sqlite3_column_text(stmt, i)) {    // 该列的值
+                    columnValue = [NSString stringWithUTF8String:(char *)sqlite3_column_text(stmt, i)];
+                } else {
+                    columnValue = @"";
+                }
+                [columnNameValue setObject:columnValue forKey:columnName];
+            }
+            [results addObject:columnNameValue];
+        }
+        result.data = results;
+    } else {
+        NSLog(@"数据库查询失败");
+        char *errMsg = (char *)sqlite3_errmsg(_db);
+        NSString *errMsgStr = [[NSString alloc] initWithUTF8String:errMsg];
+        NSLog(@"errmsg:%@", errMsgStr);
+        result.errorMsg = errMsgStr;
+    }
 	return result;
 }
 

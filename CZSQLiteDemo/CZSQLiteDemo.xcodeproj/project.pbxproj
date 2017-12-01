@@ -14,8 +14,8 @@
 		6F0062911F33618B00F721E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6F0062901F33618B00F721E4 /* Assets.xcassets */; };
 		6F0062941F33618B00F721E4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6F0062921F33618B00F721E4 /* LaunchScreen.storyboard */; };
 		6F0062A41F3373C900F721E4 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0062A31F3373C900F721E4 /* libsqlite3.tbd */; };
-		E6A930641FA1863800224F17 /* CZSQLite.m in Sources */ = {isa = PBXBuildFile; fileRef = E6A930611FA1863800224F17 /* CZSQLite.m */; };
-		E6A930651FA1863800224F17 /* CZSQLiteResult.m in Sources */ = {isa = PBXBuildFile; fileRef = E6A930631FA1863800224F17 /* CZSQLiteResult.m */; };
+		E6AE2A7F1FD14FE800BC1758 /* CZSQLite.m in Sources */ = {isa = PBXBuildFile; fileRef = E6AE2A7C1FD14FE800BC1758 /* CZSQLite.m */; };
+		E6AE2A801FD14FE800BC1758 /* CZSQLiteResult.m in Sources */ = {isa = PBXBuildFile; fileRef = E6AE2A7D1FD14FE800BC1758 /* CZSQLiteResult.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,10 +30,10 @@
 		6F0062931F33618B00F721E4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6F0062951F33618B00F721E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6F0062A31F3373C900F721E4 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
-		E6A930601FA1863800224F17 /* CZSQLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CZSQLite.h; sourceTree = "<group>"; };
-		E6A930611FA1863800224F17 /* CZSQLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CZSQLite.m; sourceTree = "<group>"; };
-		E6A930621FA1863800224F17 /* CZSQLiteResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CZSQLiteResult.h; sourceTree = "<group>"; };
-		E6A930631FA1863800224F17 /* CZSQLiteResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CZSQLiteResult.m; sourceTree = "<group>"; };
+		E6AE2A7B1FD14FE800BC1758 /* CZSQLiteResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CZSQLiteResult.h; sourceTree = "<group>"; };
+		E6AE2A7C1FD14FE800BC1758 /* CZSQLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CZSQLite.m; sourceTree = "<group>"; };
+		E6AE2A7D1FD14FE800BC1758 /* CZSQLiteResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CZSQLiteResult.m; sourceTree = "<group>"; };
+		E6AE2A7E1FD14FE800BC1758 /* CZSQLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CZSQLite.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,7 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				6F0062831F33618B00F721E4 /* CZSQLiteDemo */,
-				E6A9305F1FA1863800224F17 /* CZSQLite */,
+				E6AE2A7A1FD14FE800BC1758 /* CZSQLite */,
 				6F0062821F33618B00F721E4 /* Products */,
 				6F0062A21F3373C900F721E4 /* Frameworks */,
 			);
@@ -98,13 +98,13 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		E6A9305F1FA1863800224F17 /* CZSQLite */ = {
+		E6AE2A7A1FD14FE800BC1758 /* CZSQLite */ = {
 			isa = PBXGroup;
 			children = (
-				E6A930601FA1863800224F17 /* CZSQLite.h */,
-				E6A930611FA1863800224F17 /* CZSQLite.m */,
-				E6A930621FA1863800224F17 /* CZSQLiteResult.h */,
-				E6A930631FA1863800224F17 /* CZSQLiteResult.m */,
+				E6AE2A7E1FD14FE800BC1758 /* CZSQLite.h */,
+				E6AE2A7C1FD14FE800BC1758 /* CZSQLite.m */,
+				E6AE2A7B1FD14FE800BC1758 /* CZSQLiteResult.h */,
+				E6AE2A7D1FD14FE800BC1758 /* CZSQLiteResult.m */,
 			);
 			name = CZSQLite;
 			path = ../CZSQLite;
@@ -181,11 +181,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E6A930641FA1863800224F17 /* CZSQLite.m in Sources */,
+				E6AE2A7F1FD14FE800BC1758 /* CZSQLite.m in Sources */,
 				6F00628C1F33618B00F721E4 /* ViewController.m in Sources */,
 				6F0062891F33618B00F721E4 /* AppDelegate.m in Sources */,
 				6F0062861F33618B00F721E4 /* main.m in Sources */,
-				E6A930651FA1863800224F17 /* CZSQLiteResult.m in Sources */,
+				E6AE2A801FD14FE800BC1758 /* CZSQLiteResult.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
