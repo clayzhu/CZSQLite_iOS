@@ -17,8 +17,7 @@
 
 @implementation CZSQLite
 
-- (void)openDB:(NSString *)dbPath {
-    CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
+- (void)openDB:(NSString *)dbPath result:(CZSQLiteResult *)result {
     sqlite3_config(SQLITE_CONFIG_SERIALIZED);   // SQLite 使用串行模式，所有线程共用全局的数据库连接，并开启 WAL 模式，提高性能的同时，保证线程安全
     int openCode = sqlite3_open([dbPath UTF8String], &_db);
     result.code = openCode;
@@ -43,7 +42,7 @@
 		NSLog(@"数据库已经存在");
 		result.errorMsg = @"数据库已经存在";
 	}
-    [self openDB:dbPath];
+    [self openDB:dbPath result:result];
 	return result;
 }
 
@@ -66,7 +65,7 @@
 		NSData *mainBundleFile = [NSData dataWithContentsOfFile:localDBFilePath];	// bundle 中的数据库的数据
 		[[NSFileManager defaultManager] createFileAtPath:dbPath contents:mainBundleFile attributes:nil];	// 在 Document 中创建一个同名同数据的数据库
 	}
-    [self openDB:dbPath];
+    [self openDB:dbPath result:result];
 	return result;
 }
 
