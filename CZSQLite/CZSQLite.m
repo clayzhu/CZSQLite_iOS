@@ -83,41 +83,23 @@
 
 #pragma mark - 增删改查
 - (CZSQLiteResult *)insertData:(NSDictionary *)dataDic forTable:(NSString *)tableName {
-	NSString *insertKey = @"";
-	NSString *insertValue = @"";
-	for (NSString *key in dataDic.allKeys) {
-		insertKey = [insertKey stringByAppendingFormat:@"%@,", key];	// 拼装第一个()中的列名参数
-		insertValue = [insertValue stringByAppendingFormat:@"'%@',", dataDic[key]];	// 拼装第二个()中的值参数
-	}
-	insertKey = [insertKey substringToIndex:insertKey.length - 1];	// 剪掉最后一个“,”
-	insertValue = [insertValue substringToIndex:insertValue.length - 1];	// 剪掉最后一个“,”
-	NSString *sqlInsert = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, insertKey, insertValue];
-	return [self execSQL:sqlInsert];
+    NSString *sqlStr = [self assembleInsertData:dataDic forTable:tableName];
+	return [self execSQL:sqlStr];
 }
 
 - (CZSQLiteResult *)insertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName {
-	NSString *insertValue = @"";
-	for (NSString *value in dataList) {
-		insertValue = [insertValue stringByAppendingFormat:@"'%@',", value];	// 拼装一行的所有列的值参数
-	}
-	insertValue = [insertValue substringToIndex:insertValue.length - 1];	// 剪掉最后一个“,”
-	NSString *sqlInsert = [NSString stringWithFormat:@"INSERT INTO %@ VALUES (%@)", tableName, insertValue];
-	return [self execSQL:sqlInsert];
+    NSString *sqlStr = [self assembleInsertDataForOneRow:dataList forTable:tableName];
+	return [self execSQL:sqlStr];
 }
 
 - (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName {
-	NSString *newData = @"";
-	for (NSString *newKey in newDataDic.allKeys) {
-		newData = [newData stringByAppendingFormat:@"%@ = '%@',", newKey, newDataDic[newKey]];	// 拼装 column1 = 'value1' AND column2 = 'value2' 格式的参数
-	}
-	newData = [newData substringToIndex:newData.length - 1];	// 剪掉最后一个“,”
-	NSString *sqlUpdate = [NSString stringWithFormat:@"UPDATE %@ SET %@%@", tableName, newData, [self assembleCondition:conditionParam]];
-	return [self execSQL:sqlUpdate];
+    NSString *sqlStr = [self assembleUpdateData:newDataDic condition:conditionParam forTable:tableName];
+	return [self execSQL:sqlStr];
 }
 
 - (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
-	NSString *sqlDelete = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self assembleCondition:conditionParam]];
-	return [self execSQL:sqlDelete];
+	NSString *sqlStr = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self assembleCondition:conditionParam]];
+	return [self execSQL:sqlStr];
 }
 
 - (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName {
@@ -131,9 +113,9 @@
     } else {    // 列名列表参数不传的话，表示查询全部
         column = @"*";
     }
-    NSString *sqlQuery = [NSString stringWithFormat:@"SELECT %@ FROM %@%@", column, tableName, [self assembleCondition:conditionParam]];
+    NSString *sqlStr = [NSString stringWithFormat:@"SELECT %@ FROM %@%@", column, tableName, [self assembleCondition:conditionParam]];
     sqlite3_stmt *stmt;
-    int prepareCode = sqlite3_prepare_v2(_db, [sqlQuery UTF8String], -1, &stmt, NULL);    // 查询数据库的 code
+    int prepareCode = sqlite3_prepare_v2(_db, [sqlStr UTF8String], -1, &stmt, NULL);    // 查询数据库的 code
     result.code = prepareCode;
     if (prepareCode == SQLITE_OK) {
         NSLog(@"数据库查询成功");
@@ -183,7 +165,6 @@
 }
 
 - (void)execTransactionSQL:(NSArray *)sqlStrList {
-    // 使用事务，提交插入 SQL 语句
     @try {
         char *errorMsg;
         if (sqlite3_exec(_db, "BEGIN", NULL, NULL, &errorMsg) == SQLITE_OK) {
@@ -226,6 +207,7 @@
 	return dbPath;
 }
 
+#pragma mark 拼装 SQL 语句
 /** 根据条件参数拼装 WHERE 语句 */
 - (NSString *)assembleCondition:(id)conditionParam {
 	NSString *where = @"";
@@ -248,6 +230,61 @@
 		}
 	}
 	return [NSString stringWithFormat:@"%@%@", where, condition];
+}
+
+/**
+ 拼装 SQL 语句，为数据库的指定表插入数据
+
+ @param dataDic 要插入的数据字典，key 为列名，value 为值，格式如：@{@"name":@"A", @"age":@"24"}，id 会自增
+ @param tableName 指定表
+ @return SQL 语句
+ */
+- (NSString *)assembleInsertData:(NSDictionary *)dataDic forTable:(NSString *)tableName {
+    NSString *insertKey = @"";
+    NSString *insertValue = @"";
+    for (NSString *key in dataDic.allKeys) {
+        insertKey = [insertKey stringByAppendingFormat:@"%@,", key];    // 拼装第一个()中的列名参数
+        insertValue = [insertValue stringByAppendingFormat:@"'%@',", dataDic[key]];    // 拼装第二个()中的值参数
+    }
+    insertKey = [insertKey substringToIndex:insertKey.length - 1];    // 剪掉最后一个“,”
+    insertValue = [insertValue substringToIndex:insertValue.length - 1];    // 剪掉最后一个“,”
+    NSString *sqlStr = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, insertKey, insertValue];
+    return sqlStr;
+}
+
+/**
+ 拼装 SQL 语句，为数据库的指定表的所有列插入一组数据
+
+ @param dataList 对应表的完整的一组数据，值的顺序与列在表中的顺序一致，如：@[@"1", @"Clay", @"24"]，id 也不能省略
+ @param tableName 指定表
+ @return SQL 语句
+ */
+- (NSString *)assembleInsertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName {
+    NSString *insertValue = @"";
+    for (NSString *value in dataList) {
+        insertValue = [insertValue stringByAppendingFormat:@"'%@',", value];    // 拼装一行的所有列的值参数
+    }
+    insertValue = [insertValue substringToIndex:insertValue.length - 1];    // 剪掉最后一个“,”
+    NSString *sqlStr = [NSString stringWithFormat:@"INSERT INTO %@ VALUES (%@)", tableName, insertValue];
+    return sqlStr;
+}
+
+/**
+ 拼装 SQL 语句，根据条件为数据库的指定表更新数据
+
+ @param newDataDic 要更新的数据字典，key 为列名，value 为值，格式如：@{@"name":@"A", @"age":@"24"}
+ @param conditionParam WHERE 更新条件参数，可传的类型为 NSDictionary、NSString。条件为 NSDictionary 类型时，key 为列名，value 为值，可拼装格式为：column1 = 'value1' AND column2 = 'value2'；其他要使用 OR 或 <= 等条件时，使用 NSString 自定义条件语句。WHERE 不需要传入，可以传空
+ @param tableName 指定表
+ @return SQL 语句
+ */
+- (NSString *)assembleUpdateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName {
+    NSString *newData = @"";
+    for (NSString *newKey in newDataDic.allKeys) {
+        newData = [newData stringByAppendingFormat:@"%@ = '%@',", newKey, newDataDic[newKey]];    // 拼装 column1 = 'value1' AND column2 = 'value2' 格式的参数
+    }
+    newData = [newData substringToIndex:newData.length - 1];    // 剪掉最后一个“,”
+    NSString *sqlStr = [NSString stringWithFormat:@"UPDATE %@ SET %@%@", tableName, newData, [self assembleCondition:conditionParam]];
+    return sqlStr;
 }
 
 @end
