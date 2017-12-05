@@ -189,13 +189,8 @@
         if (sqlite3_exec(_db, "BEGIN", NULL, NULL, &errorMsg) == SQLITE_OK) {
             NSLog(@"启动事务成功");
             sqlite3_free(errorMsg);
-            sqlite3_stmt *statement;
             for (NSUInteger i = 0; i < sqlStrList.count; i ++) {
-                if (sqlite3_prepare_v2(_db,[[sqlStrList objectAtIndex:i] UTF8String], -1, &statement,NULL) == SQLITE_OK) {
-                    if (sqlite3_step(statement) != SQLITE_DONE) {
-                        sqlite3_finalize(statement);
-                    }
-                }
+                [self execSQL:[sqlStrList objectAtIndex:i]];
             }
             if (sqlite3_exec(_db, "COMMIT", NULL, NULL, &errorMsg) == SQLITE_OK) {
                 NSLog(@"提交事务成功");
