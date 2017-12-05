@@ -11,7 +11,7 @@
 #import "CZSQLiteResult.h"
 
 /**
- *  对 SQLite 3.0 数据库的常用操作的封装，可以再二次封装一个帮助类，以更方便地对当前的项目数据库进行操作。
+ *  对 SQLite 数据库的常用操作的封装，可以再二次封装一个帮助类，以更方便地对当前的项目数据库进行操作。
  *  PS: 1. 添加已有的数据库到项目里的时候，务必勾选上 Add to targets.
  *      2. 需要在 Build Phases 的 Link Binary With Libraries 中添加 libsqlite.tbd
  */
@@ -55,14 +55,21 @@
  */
 - (CZSQLiteResult *)insertData:(NSDictionary *)dataDic forTable:(NSString *)tableName;
 /**
- *  为数据库的指定表的所有列插入一组数据
+ *  为数据库的指定表的所有列插入一行数据
  *
- *  @param dataList  对应表的完整的一组数据，值的顺序与列在表中的顺序一致，如：@[@"1", @"Clay", @"24"]，id 也不能省略
+ *  @param dataList  对应表的完整的一行数据，值的顺序与列在表中的顺序一致，如：@[@"1", @"Clay", @"24"]，id 也不能省略
  *  @param tableName 指定表
  *
  *  @return CZSQLiteResult 对象，code 可能返回数据库打开失败、数据库操作失败或成功，出错时 errorMsg 返回出错信息，data 返回 nil
  */
 - (CZSQLiteResult *)insertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName;
+/**
+ 为数据库的指定表批量插入一组数据
+
+ @param dataDicList 要插入的一组数据，每一项为一个字典，key 为列名，value 为值，格式如：@{@"name":@"A", @"age":@"24"}，id 会自增
+ @param tableName 指定表
+ */
+- (void)insertDataBatch:(NSArray<NSDictionary *> *)dataDicList forTable:(NSString *)tableName;
 /**
  *  根据条件为数据库的指定表更新数据
  *
@@ -73,6 +80,14 @@
  *  @return CZSQLiteResult 对象，code 可能返回数据库打开失败、数据库操作失败或成功，出错时 errorMsg 返回出错信息，data 返回 nil
  */
 - (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName;
+/**
+ 根据条件为数据库的指定表批量更新一组数据
+
+ @param newDataDicList 要更新的一组数据，每一项为一个字典，key 为列名，value 为值，格式如：@{@"name":@"A", @"age":@"24"}
+ @param conditionParamList 与要更新的一组数据一一对应的一组条件，每一项为一个 WHERE 更新条件参数，可传的类型为 NSDictionary、NSString。条件为 NSDictionary 类型时，key 为列名，value 为值，可拼装格式为：column1 = 'value1' AND column2 = 'value2'；其他要使用 OR 或 <= 等条件时，使用 NSString 自定义条件语句。WHERE 不需要传入，可以传空
+ @param tableName 指定表
+ */
+- (void)updateDataBatch:(NSArray<NSDictionary *> *)newDataDicList condition:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName;
 /**
  *  根据条件删除数据库的指定表中的数据
  *

@@ -88,13 +88,41 @@
 }
 
 - (CZSQLiteResult *)insertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName {
-    NSString *sqlStr = [self assembleInsertDataForOneRow:dataList forTable:tableName];
+    NSString *insertValue = @"";
+    for (NSString *value in dataList) {
+        insertValue = [insertValue stringByAppendingFormat:@"'%@',", value];    // 拼装一行的所有列的值参数
+    }
+    insertValue = [insertValue substringToIndex:insertValue.length - 1];    // 剪掉最后一个“,”
+    NSString *sqlStr = [NSString stringWithFormat:@"INSERT INTO %@ VALUES (%@)", tableName, insertValue];
 	return [self execSQL:sqlStr];
+}
+
+- (void)insertDataBatch:(NSArray<NSDictionary *> *)dataDicList forTable:(NSString *)tableName {
+    NSMutableArray *sqlStrMA = [NSMutableArray arrayWithCapacity:dataDicList.count];
+    for (NSDictionary *dataDic in dataDicList) {
+        NSString *sqlStr = [self assembleInsertData:dataDic forTable:tableName];
+        [sqlStrMA addObject:sqlStr];
+    }
+    [self execTransactionSQL:sqlStrMA];
 }
 
 - (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName {
     NSString *sqlStr = [self assembleUpdateData:newDataDic condition:conditionParam forTable:tableName];
 	return [self execSQL:sqlStr];
+}
+
+- (void)updateDataBatch:(NSArray<NSDictionary *> *)newDataDicList condition:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName {
+    if (newDataDicList.count != conditionParamList.count) { // 需要更新的数据个数和条件个数对不上
+        return;
+    }
+    NSMutableArray *sqlStrMA = [NSMutableArray arrayWithCapacity:newDataDicList.count];
+    for (NSUInteger i = 0; i < newDataDicList.count; i ++) {
+        NSDictionary *newDataDic = newDataDicList[i];
+        id conditionParam = conditionParamList[i];
+        NSString *sqlStr = [self assembleUpdateData:newDataDic condition:conditionParam forTable:tableName];
+        [sqlStrMA addObject:sqlStr];
+    }
+    [self execTransactionSQL:sqlStrMA];
 }
 
 - (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
@@ -249,23 +277,6 @@
     insertKey = [insertKey substringToIndex:insertKey.length - 1];    // 剪掉最后一个“,”
     insertValue = [insertValue substringToIndex:insertValue.length - 1];    // 剪掉最后一个“,”
     NSString *sqlStr = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, insertKey, insertValue];
-    return sqlStr;
-}
-
-/**
- 拼装 SQL 语句，为数据库的指定表的所有列插入一组数据
-
- @param dataList 对应表的完整的一组数据，值的顺序与列在表中的顺序一致，如：@[@"1", @"Clay", @"24"]，id 也不能省略
- @param tableName 指定表
- @return SQL 语句
- */
-- (NSString *)assembleInsertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName {
-    NSString *insertValue = @"";
-    for (NSString *value in dataList) {
-        insertValue = [insertValue stringByAppendingFormat:@"'%@',", value];    // 拼装一行的所有列的值参数
-    }
-    insertValue = [insertValue substringToIndex:insertValue.length - 1];    // 剪掉最后一个“,”
-    NSString *sqlStr = [NSString stringWithFormat:@"INSERT INTO %@ VALUES (%@)", tableName, insertValue];
     return sqlStr;
 }
 
