@@ -103,12 +103,18 @@
 
 #pragma mark - 使用 SQL 语句
 /**
- *  默认的数据库操作方法，更加复杂的数据库操作可以直接使用这个方法
+ *  直接使用 SQL 语句的数据库操作方法，更加复杂的数据库操作可以直接使用这个方法
  *
  *  @param sqlStr 符合 SQLite 语法标准的语句
  *
  *  @return CZSQLiteResult 对象，code 可能返回数据库打开失败、数据库操作失败或成功，出错时 errorMsg 返回出错信息，data 返回 nil
  */
 - (CZSQLiteResult *)execSQL:(NSString *)sqlStr;
+/**
+ 使用事务批量操作数据库的方法
+
+ @param sqlStrList 符合 SQLite 语法标准的语句数组
+ */
+- (void)execTransactionSQL:(NSArray *)sqlStrList;
 
 @end
