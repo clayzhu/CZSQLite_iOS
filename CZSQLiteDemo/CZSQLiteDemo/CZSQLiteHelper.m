@@ -36,8 +36,7 @@ static NSString *kTable_Person = @"PERSON";
 - (void)createTable {
     [self.czSQLite createTable:kTable_Person columns:@[@"id INTEGER PRIMARY KEY AUTOINCREMENT",
                                                        @"name TEXT",
-                                                       @"age INTEGER"]
-                         forDB:kDatabase];
+                                                       @"age INTEGER"]];
 }
 
 @end

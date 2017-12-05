@@ -35,6 +35,7 @@
     }
 }
 
+#pragma mark - 建数据库和表
 - (CZSQLiteResult *)createDB:(NSString *)dbName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
 	NSString *dbPath = [self dbPath:dbName];
@@ -69,7 +70,7 @@
 	return result;
 }
 
-- (CZSQLiteResult *)createTable:(NSString *)tableName columns:(NSArray *)columns forDB:(NSString *)dbName {
+- (CZSQLiteResult *)createTable:(NSString *)tableName columns:(NSArray *)columns {
 	NSString *columnStr = @"";
 	for (NSString *key in columns) {	// 将表中每一列列名列类型的字符串拼装成 SQL 语句的参数
 		columnStr = [columnStr stringByAppendingString:key];
@@ -77,24 +78,11 @@
 	}
 	columnStr = [columnStr substringToIndex:columnStr.length - 1];	// 剪掉最后一个“,”
 	NSString *sqlCreate = [NSString stringWithFormat:@"CREATE TABLE IF NOT EXISTS %@ (%@)", tableName, columnStr];
-	return [self execSQL:sqlCreate forDB:dbName];
+	return [self execSQL:sqlCreate];
 }
 
-- (CZSQLiteResult *)execSQL:(NSString *)sqlStr forDB:(NSString *)dbName {
-	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
-    char *err;
-    int execCode = sqlite3_exec(_db, [sqlStr UTF8String], NULL, NULL, &err);    // 执行 SQL 语句的 code
-    result.code = execCode;
-    if (execCode != SQLITE_OK) {
-        NSLog(@"数据库操作失败");
-        result.errorMsg = [[NSString alloc] initWithUTF8String:err];
-    } else {
-        NSLog(@"数据库操作成功");
-    }
-	return result;
-}
-
-- (CZSQLiteResult *)insertData:(NSDictionary *)dataDic forTable:(NSString *)tableName forDB:(NSString *)dbName {
+#pragma mark - 增删改查
+- (CZSQLiteResult *)insertData:(NSDictionary *)dataDic forTable:(NSString *)tableName {
 	NSString *insertKey = @"";
 	NSString *insertValue = @"";
 	for (NSString *key in dataDic.allKeys) {
@@ -104,35 +92,35 @@
 	insertKey = [insertKey substringToIndex:insertKey.length - 1];	// 剪掉最后一个“,”
 	insertValue = [insertValue substringToIndex:insertValue.length - 1];	// 剪掉最后一个“,”
 	NSString *sqlInsert = [NSString stringWithFormat:@"INSERT INTO %@ (%@) VALUES (%@)", tableName, insertKey, insertValue];
-	return [self execSQL:sqlInsert forDB:dbName];
+	return [self execSQL:sqlInsert];
 }
 
-- (CZSQLiteResult *)insertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName forDB:(NSString *)dbName {
+- (CZSQLiteResult *)insertDataForOneRow:(NSArray *)dataList forTable:(NSString *)tableName {
 	NSString *insertValue = @"";
 	for (NSString *value in dataList) {
 		insertValue = [insertValue stringByAppendingFormat:@"'%@',", value];	// 拼装一行的所有列的值参数
 	}
 	insertValue = [insertValue substringToIndex:insertValue.length - 1];	// 剪掉最后一个“,”
 	NSString *sqlInsert = [NSString stringWithFormat:@"INSERT INTO %@ VALUES (%@)", tableName, insertValue];
-	return [self execSQL:sqlInsert forDB:dbName];
+	return [self execSQL:sqlInsert];
 }
 
-- (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName forDB:(NSString *)dbName {
+- (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName {
 	NSString *newData = @"";
 	for (NSString *newKey in newDataDic.allKeys) {
 		newData = [newData stringByAppendingFormat:@"%@ = '%@',", newKey, newDataDic[newKey]];	// 拼装 column1 = 'value1' AND column2 = 'value2' 格式的参数
 	}
 	newData = [newData substringToIndex:newData.length - 1];	// 剪掉最后一个“,”
 	NSString *sqlUpdate = [NSString stringWithFormat:@"UPDATE %@ SET %@%@", tableName, newData, [self assembleCondition:conditionParam]];
-	return [self execSQL:sqlUpdate forDB:dbName];
+	return [self execSQL:sqlUpdate];
 }
 
-- (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName forDB:(NSString *)dbName {
+- (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
 	NSString *sqlDelete = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self assembleCondition:conditionParam]];
-	return [self execSQL:sqlDelete forDB:dbName];
+	return [self execSQL:sqlDelete];
 }
 
-- (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName forDB:(NSString *)dbName {
+- (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
     NSString *column = @"";
     if (columnList && columnList.count > 0) {
@@ -175,8 +163,23 @@
 	return result;
 }
 
-- (CZSQLiteResult *)selectAllFromTable:(NSString *)tableName forDB:(NSString *)dbName {
-	return [self selectData:nil condition:nil forTable:tableName forDB:dbName];
+- (CZSQLiteResult *)selectAllFromTable:(NSString *)tableName {
+	return [self selectData:nil condition:nil forTable:tableName];
+}
+
+#pragma mark - 使用 SQL 语句
+- (CZSQLiteResult *)execSQL:(NSString *)sqlStr {
+    CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
+    char *err;
+    int execCode = sqlite3_exec(_db, [sqlStr UTF8String], NULL, NULL, &err);    // 执行 SQL 语句的 code
+    result.code = execCode;
+    if (execCode != SQLITE_OK) {
+        NSLog(@"数据库操作失败");
+        result.errorMsg = [[NSString alloc] initWithUTF8String:err];
+    } else {
+        NSLog(@"数据库操作成功");
+    }
+    return result;
 }
 
 #pragma mark - Private
