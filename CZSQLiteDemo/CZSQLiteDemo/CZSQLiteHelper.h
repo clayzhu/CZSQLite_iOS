@@ -29,6 +29,10 @@
 - (void)updateName:(NSString *)name whereAge:(NSNumber *)age;
 /** 批量更新多个数据 */
 - (void)updateNames:(NSArray<NSString *> *)names whereAges:(NSArray<NSNumber *> *)ages;
+/** 删除一个数据 */
+- (void)deleteAge:(NSNumber *)age;
+/** 批量删除多个数据 */
+- (void)deleteAges:(NSArray<NSNumber *> *)ages;
 /** 查询表中所有数据 */
 - (NSArray<NSDictionary *> *)queryPersons;
 

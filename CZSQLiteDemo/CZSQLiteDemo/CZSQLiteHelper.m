@@ -57,18 +57,6 @@ static NSString *kTable_Person = @"PERSON";
     [self.czSQLite insertDataBatch:ma forTable:kTable_Person];
 }
 
-- (NSArray<NSDictionary *> *)queryPersons {
-    CZSQLiteResult *result = [self.czSQLite selectAllFromTable:kTable_Person];
-    if (result.data.count > 0) {
-        NSMutableArray<NSDictionary *> *ma = [NSMutableArray array];
-        for (NSDictionary *dic in result.data) {
-            [ma addObject:dic];
-        }
-        return ma;
-    }
-    return nil;
-}
-
 - (void)updateName:(NSString *)name whereAge:(NSNumber *)age {
     [self.czSQLite updateData:@{@"name":name} condition:@{@"age":age} forTable:kTable_Person];
 }
@@ -86,6 +74,30 @@ static NSString *kTable_Person = @"PERSON";
         [ageMA addObject:@{@"age":age}];
     }
     [self.czSQLite updateDataBatch:nameMA condition:ageMA forTable:kTable_Person];
+}
+
+- (void)deleteAge:(NSNumber *)age {
+    [self.czSQLite deleteDataWithCondition:@{@"age":age} forTable:kTable_Person];
+}
+
+- (void)deleteAges:(NSArray<NSNumber *> *)ages {
+    NSMutableArray<NSDictionary *> *ageMA = [NSMutableArray arrayWithCapacity:ages.count];
+    for (NSNumber *age in ages) {
+        [ageMA addObject:@{@"age":age}];
+    }
+    [self.czSQLite deleteDataWithConditionBatch:ageMA forTable:kTable_Person];
+}
+
+- (NSArray<NSDictionary *> *)queryPersons {
+    CZSQLiteResult *result = [self.czSQLite selectAllFromTable:kTable_Person];
+    if (result.data.count > 0) {
+        NSMutableArray<NSDictionary *> *ma = [NSMutableArray array];
+        for (NSDictionary *dic in result.data) {
+            [ma addObject:dic];
+        }
+        return ma;
+    }
+    return nil;
 }
 
 @end
