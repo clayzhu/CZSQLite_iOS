@@ -207,13 +207,21 @@
     }
     @try {
         char *errorMsg;
-        if (sqlite3_exec(_db, "BEGIN", NULL, NULL, &errorMsg) == SQLITE_OK) {
+        if (sqlite3_exec(_db, "BEGIN", NULL, NULL, &errorMsg) == SQLITE_OK) {   // 启动事务
             NSLog(@"启动事务成功");
             sqlite3_free(errorMsg);
+            
+            // 执行 SQL 语句。如果使用 sqlite3_exec，SQLite 要对循环中每一句 SQL 语句进行“词法分析”和“语法分析”，这对于同时插入大量数据的操作来说，很浪费时间
+            sqlite3_stmt *statement;
             for (NSUInteger i = 0; i < sqlStrList.count; i ++) {
-                [self execSQL:[sqlStrList objectAtIndex:i]];
+                if (sqlite3_prepare_v2(_db, [sqlStrList[i] UTF8String], -1, &statement, NULL) == SQLITE_OK) {
+                    if (sqlite3_step(statement) != SQLITE_DONE) {
+                        sqlite3_finalize(statement);
+                    }
+                }
             }
-            if (sqlite3_exec(_db, "COMMIT", NULL, NULL, &errorMsg) == SQLITE_OK) {
+            
+            if (sqlite3_exec(_db, "COMMIT", NULL, NULL, &errorMsg) == SQLITE_OK) {  // 提交事务
                 NSLog(@"提交事务成功");
             }
             sqlite3_free(errorMsg);
@@ -223,7 +231,7 @@
         }
     } @catch (NSException *exception) {
         char *errorMsg;
-        if (sqlite3_exec(_db, "ROLLBACK", NULL, NULL, &errorMsg) == SQLITE_OK) {
+        if (sqlite3_exec(_db, "ROLLBACK", NULL, NULL, &errorMsg) == SQLITE_OK) {    // 回滚事务
             NSLog(@"回滚事务成功");
         }
         sqlite3_free(errorMsg);
