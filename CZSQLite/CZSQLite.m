@@ -216,6 +216,7 @@
             for (NSUInteger i = 0; i < sqlStrList.count; i ++) {
                 if (sqlite3_prepare_v2(_db, [sqlStrList[i] UTF8String], -1, &statement, NULL) == SQLITE_OK) {
                     if (sqlite3_step(statement) != SQLITE_DONE) {
+                        NSLog(@"数据库操作成功");
                         sqlite3_finalize(statement);
                     }
                 }
