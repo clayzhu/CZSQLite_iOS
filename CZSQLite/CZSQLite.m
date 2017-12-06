@@ -126,8 +126,17 @@
 }
 
 - (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
-	NSString *sqlStr = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self assembleCondition:conditionParam]];
+	NSString *sqlStr = [self assembleDeleteDataWithCondition:conditionParam forTable:tableName];
 	return [self execSQL:sqlStr];
+}
+
+- (void)deleteDataWithConditionBatch:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName {
+    NSMutableArray *sqlStrMA = [NSMutableArray arrayWithCapacity:conditionParamList.count];
+    for (id conditionParam in conditionParamList) {
+        NSString *sqlStr = [self assembleDeleteDataWithCondition:conditionParam forTable:tableName];
+        [sqlStrMA addObject:sqlStr];
+    }
+    [self execTransactionSQL:sqlStrMA];
 }
 
 - (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName {
@@ -193,6 +202,9 @@
 }
 
 - (void)execTransactionSQL:(NSArray *)sqlStrList {
+    if (sqlStrList.count == 0) {
+        return;
+    }
     @try {
         char *errorMsg;
         if (sqlite3_exec(_db, "BEGIN", NULL, NULL, &errorMsg) == SQLITE_OK) {
@@ -295,6 +307,18 @@
     }
     newData = [newData substringToIndex:newData.length - 1];    // 剪掉最后一个“,”
     NSString *sqlStr = [NSString stringWithFormat:@"UPDATE %@ SET %@%@", tableName, newData, [self assembleCondition:conditionParam]];
+    return sqlStr;
+}
+
+/**
+ 拼装 SQL 语句，根据条件删除数据库的指定表中的数据
+
+ @param conditionParam WHERE 删除条件参数，可传的类型为 NSDictionary、NSString。条件为 NSDictionary 类型时，key 为列名，value 为值，可拼装格式为：column1 = 'value1' AND column2 = 'value2'；其他要使用 OR 或 <= 等条件时，使用 NSString 自定义条件语句；当要删除整张表里的数据时，传入 nil。WHERE 不需要传入，可以传空
+ @param tableName 指定表
+ @return SQL 语句
+ */
+- (NSString *)assembleDeleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
+    NSString *sqlStr = [NSString stringWithFormat:@"DELETE FROM %@%@", tableName, [self assembleCondition:conditionParam]];
     return sqlStr;
 }
 

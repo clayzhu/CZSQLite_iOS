@@ -98,6 +98,13 @@
  */
 - (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName;
 /**
+ 根据条件批量删除数据库的指定表中的一组数据
+
+ @param conditionParamList 要删除的数据的一组条件，每一项为一个 WHERE 删除条件参数，可传的类型为 NSDictionary、NSString。条件为 NSDictionary 类型时，key 为列名，value 为值，可拼装格式为：column1 = 'value1' AND column2 = 'value2'；其他要使用 OR 或 <= 等条件时，使用 NSString 自定义条件语句；当要删除整张表里的数据时，传入 nil。WHERE 不需要传入，可以传空
+ @param tableName 指定表
+ */
+- (void)deleteDataWithConditionBatch:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName;
+/**
  *  根据条件从数据库的指定表查询指定列的数据
  *
  *  @param columnList     要查询的指定列的列名列表，格式如：@[@"name", @"age"]；传入 nil 表示查询全部
