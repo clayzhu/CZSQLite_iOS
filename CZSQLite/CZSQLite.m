@@ -82,6 +82,7 @@
 }
 
 #pragma mark - 增删改查
+#pragma mark 添加
 - (CZSQLiteResult *)insertData:(NSDictionary *)dataDic forTable:(NSString *)tableName {
     NSString *sqlStr = [self assembleInsertData:dataDic forTable:tableName];
 	return [self execSQL:sqlStr];
@@ -106,6 +107,7 @@
     [self execTransactionSQL:sqlStrMA];
 }
 
+#pragma mark 修改
 - (CZSQLiteResult *)updateData:(NSDictionary *)newDataDic condition:(id)conditionParam forTable:(NSString *)tableName {
     NSString *sqlStr = [self assembleUpdateData:newDataDic condition:conditionParam forTable:tableName];
 	return [self execSQL:sqlStr];
@@ -125,6 +127,7 @@
     [self execTransactionSQL:sqlStrMA];
 }
 
+#pragma mark 删除
 - (CZSQLiteResult *)deleteDataWithCondition:(id)conditionParam forTable:(NSString *)tableName {
 	NSString *sqlStr = [self assembleDeleteDataWithCondition:conditionParam forTable:tableName];
 	return [self execSQL:sqlStr];
@@ -139,6 +142,12 @@
     [self execTransactionSQL:sqlStrMA];
 }
 
+- (CZSQLiteResult *)dropTable:(NSString *)tableName {
+    NSString *sqlStr = [NSString stringWithFormat:@"DROP TABLE %@", tableName];
+    return [self execSQL:sqlStr];
+}
+
+#pragma mark 查找
 - (CZSQLiteResult *)selectData:(NSArray *)columnList condition:(id)conditionParam forTable:(NSString *)tableName {
 	CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
     NSString *column = @"";
