@@ -45,7 +45,6 @@
 - (CZSQLiteResult *)createTable:(NSString *)tableName columns:(NSArray *)columns;
 
 #pragma mark - 增删改查
-#pragma mark 添加
 /**
  *  为数据库的指定表插入数据
  *
@@ -71,8 +70,6 @@
  @param tableName 指定表
  */
 - (void)insertDataBatch:(NSArray<NSDictionary *> *)dataDicList forTable:(NSString *)tableName;
-
-#pragma mark 修改
 /**
  *  根据条件为数据库的指定表更新数据
  *
@@ -91,8 +88,6 @@
  @param tableName 指定表
  */
 - (void)updateDataBatch:(NSArray<NSDictionary *> *)newDataDicList condition:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName;
-
-#pragma mark 删除
 /**
  *  根据条件删除数据库的指定表中的数据
  *
@@ -111,12 +106,10 @@
 - (void)deleteDataWithConditionBatch:(NSArray<id> *)conditionParamList forTable:(NSString *)tableName;
 /**
  从数据库删除指定表
- 
+
  @param tableName 指定表
  */
 - (CZSQLiteResult *)dropTable:(NSString *)tableName;
-
-#pragma mark 查找
 /**
  *  根据条件从数据库的指定表查询指定列的数据
  *
