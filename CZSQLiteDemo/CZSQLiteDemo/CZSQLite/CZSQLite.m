@@ -139,6 +139,10 @@
         NSString *sqlStr = [self assembleDeleteDataWithCondition:conditionParam forTable:tableName];
         [sqlStrMA addObject:sqlStr];
     }
+    if (sqlStrMA.count == 0) {
+        NSString *sqlStr = [self assembleDeleteDataWithCondition:nil forTable:tableName];
+        [sqlStrMA addObject:sqlStr];
+    }
     [self execTransactionSQL:sqlStrMA];
 }
 
