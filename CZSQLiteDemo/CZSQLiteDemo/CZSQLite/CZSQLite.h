@@ -129,6 +129,25 @@
  */
 - (CZSQLiteResult *)selectAllFromTable:(NSString *)tableName;
 
+#pragma mark - 修改表
+/**
+ 重命名指定表
+ 
+ @param tableNameOld 原表名
+ @param tableNameNew 新表名
+ @return CZSQLiteResult 对象，code 可能返回数据库打开失败、数据库操作失败或成功，出错时 errorMsg 返回出错信息，data 返回 nil
+ */
+- (CZSQLiteResult *)alterTableFromOldName:(NSString *)tableNameOld toNewName:(NSString *)tableNameNew;
+/**
+ 在指定表中添加新列
+ 
+ @param columnName 新列的名称
+ @param columnType 新列的数据类型
+ @param tableName 指定表
+ @return CZSQLiteResult 对象，code 可能返回数据库打开失败、数据库操作失败或成功，出错时 errorMsg 返回出错信息，data 返回 nil
+ */
+- (CZSQLiteResult *)alterAddColumn:(NSString *)columnName columnType:(NSString *)columnType forTable:(NSString *)tableName;
+
 #pragma mark - 使用 SQL 语句
 /**
  *  直接使用 SQL 语句的数据库操作方法，更加复杂的数据库操作可以直接使用这个方法

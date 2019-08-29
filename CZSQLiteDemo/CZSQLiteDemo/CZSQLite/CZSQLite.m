@@ -203,6 +203,17 @@
 	return [self selectData:nil condition:nil forTable:tableName];
 }
 
+#pragma mark - 修改表
+- (CZSQLiteResult *)alterTableFromOldName:(NSString *)tableNameOld toNewName:(NSString *)tableNameNew {
+    NSString *sqlStr = [NSString stringWithFormat:@"ALTER TABLE %@ RENAME TO %@", tableNameOld, tableNameNew];
+    return [self execSQL:sqlStr];
+}
+
+- (CZSQLiteResult *)alterAddColumn:(NSString *)columnName columnType:(NSString *)columnType forTable:(NSString *)tableName {
+    NSString *sqlStr = [NSString stringWithFormat:@"ALTER TABLE %@ ADD COLUMN %@ %@", tableName, columnName, columnType];
+    return [self execSQL:sqlStr];
+}
+
 #pragma mark - 使用 SQL 语句
 - (CZSQLiteResult *)execSQL:(NSString *)sqlStr {
     CZSQLiteResult *result = [[CZSQLiteResult alloc] init];
